@@ -1,258 +1,101 @@
--- ==================================================
--- Snow Disaster Hub - 完整 UI 源码 (最终版)
--- 架构：UI框架 + Tab系统 + WindUI风格组件
--- ==================================================
-
-local Players = game:GetService("Players")
+-- ============================================
+-- 外部接口：高级组件工厂 (追加到 UI 源码)
+-- ============================================
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-
--- 防止重复加载
-if _G.SnowDisasterLoaded then return end
-_G.SnowDisasterLoaded = true
-
--- ============================================
--- 1. 主屏幕 UI
--- ============================================
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SnowDisasterHub"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.IgnoreGuiInset = true
-ScreenGui.Parent = playerGui
-
--- ============================================
--- 2. 雪花特效容器
--- ============================================
-local snowContainer = Instance.new("Frame", ScreenGui)
-snowContainer.Size = UDim2.fromScale(1, 1)
-snowContainer.BackgroundTransparency = 1
-snowContainer.ZIndex = 0
-snowContainer.Visible = false
-
--- (雪花生成逻辑保持不变，此处省略以精简篇幅，如需可复用你原代码)
-
--- ============================================
--- 3. 悬浮窗 (固定在左上角)
--- ============================================
-local FloatingContainer = Instance.new("Frame")
-FloatingContainer.Size = UDim2.new(0, 40, 0, 40)
-FloatingContainer.Position = UDim2.new(0, 20, 0, 20) -- ✅ 原始位置
-FloatingContainer.BackgroundTransparency = 1
-FloatingContainer.Parent = ScreenGui
-FloatingContainer.ZIndex = 100
-
-local AvatarButton = Instance.new("ImageButton", FloatingContainer)
-AvatarButton.Size = UDim2.new(0, 36, 0, 36)
-AvatarButton.Position = UDim2.new(0.5, -18, 0.5, -18)
-AvatarButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-AvatarButton.BackgroundTransparency = 0.2
-AvatarButton.Image = "rbxassetid://138791746843191"
-AvatarButton.AutoButtonColor = false
-Instance.new("UICorner", AvatarButton).CornerRadius = UDim.new(1, 0)
-
--- ============================================
--- 4. 主 UI 面板
--- ============================================
-local MainPanel = Instance.new("Frame")
-MainPanel.Name = "MainPanel"
-MainPanel.Size = UDim2.new(0, 480, 0, 320)
-MainPanel.Position = UDim2.new(0.5, -240, 0.5, -160)
-MainPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainPanel.BackgroundTransparency = 0.15
-MainPanel.Visible = false
-MainPanel.Parent = ScreenGui
-Instance.new("UICorner", MainPanel).CornerRadius = UDim.new(0, 14)
-
--- 标题
-local Title = Instance.new("TextLabel", MainPanel)
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.BackgroundTransparency = 1
-Title.Text = "Snow Disaster Hub"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 22
-Title.TextColor3 = Color3.new(1, 1, 1)
-
--- ============================================
--- 5. Tab 系统 (核心升级)
--- ============================================
-local Tabs = {}
-local TabFrames = {}
-
-local tabBar = Instance.new("Frame", MainPanel)
-tabBar.Size = UDim2.new(1, 0, 0, 40)
-tabBar.Position = UDim2.new(0, 0, 0, 50)
-tabBar.BackgroundTransparency = 1
-
-local tabLayout = Instance.new("UIListLayout", tabBar)
-tabLayout.FillDirection = Enum.FillDirection.Horizontal
-tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-tabLayout.Padding = UDim.new(0, 6)
-
--- ✅ 外部 API：创建 Tab
-_G.CreateHubTab = function(name)
-	if Tabs[name] then return TabFrames[name] end
-
-	local tabBtn = Instance.new("TextButton", tabBar)
-	tabBtn.Size = UDim2.new(0, 90, 1, 0)
-	tabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-	tabBtn.Text = name
-	tabBtn.Font = Enum.Font.GothamBold
-	tabBtn.TextSize = 14
-	tabBtn.TextColor3 = Color3.new(1, 1, 1)
-	tabBtn.AutoButtonColor = false
-	Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 6)
-
-	local frame = Instance.new("ScrollingFrame", MainPanel)
-	frame.Size = UDim2.new(1, 0, 1, -90)
-	frame.Position = UDim2.new(0, 0, 0, 90)
-	frame.BackgroundTransparency = 1
-	frame.ScrollBarThickness = 4
-	frame.Visible = false
-	Instance.new("UIListLayout", frame).Padding = UDim.new(0, 8)
-
-	Tabs[name] = tabBtn
-	TabFrames[name] = frame
-
-	tabBtn.MouseButton1Click:Connect(function()
-		for n, f in pairs(TabFrames) do
-			f.Visible = (n == name)
-			Tabs[n].BackgroundColor3 =
-				(n == name) and Color3.fromRGB(70, 70, 70) or Color3.fromRGB(45, 45, 45)
-		end
-	end)
-
-	if #Tabs == 1 then
-		frame.Visible = true
-		tabBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-	end
-
-	return frame
-end
-
--- ============================================
--- 6. WindUI 风格组件工厂
--- ============================================
+-- 通用样式函数
 local function ApplyStyle(obj)
-	Instance.new("UICorner", obj).CornerRadius = UDim.new(0, 8)
-	obj.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-	obj.BackgroundTransparency = 0.2
+    Instance.new("UICorner", obj).CornerRadius = UDim.new(0, 8)
+    obj.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+    obj.BackgroundTransparency = 0.2
 end
 
--- ✅ 按钮 (带反馈)
-_G.CreateButton = function(tabFrame, text, callback)
-	local btn = Instance.new("TextButton", tabFrame)
-	btn.Size = UDim2.new(0.92, 0, 0, 38)
-	btn.Text = text
-	btn.Font = enum.Font.Gotham
-	btn.TextSize = 14
-	btn.TextColor3 = Color3.new(1, 1, 1)
-	btn.AutoButtonColor = false
-	ApplyStyle(btn)
+-- ✅ 1. 开关组件 (Toggle)
+_G.CreateHubToggle = function(text, default, callback)
+    local frame = Instance.new("Frame", ContentArea)
+    frame.Size = UDim2.new(0.92, 0, 0, 40)
+    ApplyStyle(frame)
 
-	local normal = Color3.fromRGB(55, 55, 55)
-	local hover = Color3.fromRGB(75, 75, 75)
-	local press = Color3.fromRGB(35, 35, 35)
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(0.7, 0, 1, 0)
+    label.Text = text
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 14
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Position = UDim2.new(0, 12, 0, 0)
 
-	btn.MouseEnter:Connect(function() TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = hover}):Play() end)
-	btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = normal}):Play() end)
-	btn.MouseButton1Down:Connect(function() TweenService:Create(btn, TweenInfo.new(0.08), {BackgroundColor3 = press}):Play() end)
-	btn.MouseButton1Up:Connect(function() TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = hover}):Play() end)
-	btn.MouseButton1Click:Connect(function() if callback then callback() end end)
+    local toggleBtn = Instance.new("TextButton", frame)
+    toggleBtn.Size = UDim2.new(0, 50, 0, 24)
+    toggleBtn.Position = UDim2.new(1, -60, 0.5, -12)
+    toggleBtn.BackgroundColor3 = default and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(80, 80, 80)
+    toggleBtn.Text = ""
+    toggleBtn.AutoButtonColor = false
+    ApplyStyle(toggleBtn)
+
+    local state = default or false
+    toggleBtn.MouseButton1Click:Connect(function()
+        state = not state
+        TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = state and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(80, 80, 80)
+        }):Play()
+        if callback then callback(state) end
+    end)
+    
+    return frame
 end
 
--- ✅ 开关 (Toggle)
-_G.CreateToggle = function(tabFrame, text, default, callback)
-	local frame = Instance.new("Frame", tabFrame)
-	frame.Size = UDim2.new(0.92, 0, 0, 38)
-	ApplyStyle(frame)
+-- ✅ 2. 滑块组件 (Slider)
+_G.CreateHubSlider = function(text, min, max, default, callback)
+    local frame = Instance.new("Frame", ContentArea)
+    frame.Size = UDim2.new(0.92, 0, 0, 65)
+    ApplyStyle(frame)
 
-	local label = Instance.new("TextLabel", frame)
-	label.Size = UDim2.new(0.7, 0, 1, 0)
-	label.Text = text
-	label.Font = enum.Font.Gotham
-	label.TextSize = 14
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.BackgroundTransparency = 1
-	label.TextXAlignment = enum.TextXAlignment.Left
-	label.Position = UDim2.new(0, 12, 0, 0)
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(1, -20, 0, 25)
+    label.Position = UDim2.new(0, 10, 0, 5)
+    label.Text = text .. ": " .. tostring(default)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 14
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1
+    label.TextXAlignment = enum.TextXAlignment.Left
 
-	local toggle = Instance.new("TextButton", frame)
-	toggle.Size = UDim2.new(0, 48, 0, 22)
-	toggle.Position = UDim2.new(1, -58, 0.5, -11)
-	toggle.BackgroundColor3 = default and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(80, 80, 80)
-	toggle.Text = ""
-	toggle.AutoButtonColor = false
-	ApplyStyle(toggle)
+    local track = Instance.new("Frame", frame)
+    track.Size = UDim2.new(1, -20, 0, 6)
+    track.Position = UDim2.new(0, 10, 0.5, 10)
+    track.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    ApplyStyle(track)
 
-	local state = default or false
-	toggle.MouseButton1Click:Connect(function()
-		state = not state
-		toggle.BackgroundColor3 = state and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(80, 80, 80)
-		if callback then callback(state) end
-	end)
+    local fill = Instance.new("Frame", track)
+    fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
+    fill.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+    ApplyStyle(fill)
+
+    local knob = Instance.new("TextButton", track)
+    knob.Size = UDim2.new(0, 16, 0, 16)
+    knob.Position = UDim2.new((default-min)/(max-min), -8, 0.5, -8)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.Text = ""
+    knob.AutoButtonColor = false
+    ApplyStyle(knob)
+
+    local value = default
+    local dragging = false
+    
+    local function update(input)
+        local relativeX = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+        value = min + (max - min) * relativeX
+        fill.Size = UDim2.new(relativeX, 0, 1, 0)
+        knob.Position = UDim2.new(relativeX, -8, 0.5, -8)
+        label.Text = text .. ": " .. string.format("%.1f", value)
+        if callback then callback(value) end
+    end
+
+    knob.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end end)
+    game:GetService("UserInputService").InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+    game:GetService("RunService").RenderStepped:Connect(function() if dragging then update(game:GetService("UserInputService"):GetMouseLocation()) end end)
+    
+    return frame
 end
-
--- ✅ 滑块 (Slider)
-_G.CreateSlider = function(tabFrame, text, min, max, default, callback)
-	local frame = Instance.new("Frame", tabFrame)
-	frame.Size = UDim2.new(0.92, 0, 0, 60)
-	ApplyStyle(frame)
-
-	local label = Instance.new("TextLabel", frame)
-	label.Size = UDim2.new(1, -20, 0, 25)
-	label.Position = UDim2.new(0, 10, 0, 4)
-	label.Text = text .. ": " .. tostring(default)
-	label.Font = enum.Font.Gotham
-	label.TextSize = 13
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.BackgroundTransparency = 1
-	label.TextXAlignment = enum.TextXAlignment.Left
-
-	local track = Instance.new("Frame", frame)
-	track.Size = UDim2.new(1, -20, 0, 6)
-	track.Position = UDim2.new(0, 10, 0.5, 10)
-	track.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-	ApplyStyle(track)
-
-	local fill = Instance.new("Frame", track)
-	fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
-	fill.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-	ApplyStyle(fill)
-
-	local knob = Instance.new("TextButton", track)
-	knob.Size = UDim2.new(0, 16, 0, 16)
-	knob.Position = UDim2.new((default-min)/(max-min), -8, 0.5, -8)
-	knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	knob.Text = ""
-	knob.AutoButtonColor = false
-	ApplyStyle(knob)
-
-	local value = default
-	local dragging = false
-
-	local function update(input)
-		local relativeX = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
-		value = min + (max - min) * relativeX
-		fill.Size = UDim2.new(relativeX, 0, 1, 0)
-		knob.Position = UDim2.new(relativeX, -8, 0.5, -8)
-		label.Text = text .. ": " .. string.format("%.1f", value)
-		if callback then callback(value) end
-	end
-
-	knob.InputBegan:Connect(function(input) if input.UserInputType == enum.UserInputType.MouseButton1 then dragging = true end end)
-	game:GetService("UserInputService").InputEnded:Connect(function(input) if input.UserInputType == enum.UserInputType.MouseButton1 then dragging = false end end)
-	game:GetService("RunService").RenderStepped:Connect(function() if dragging then update(game:GetService("UserInputService"):GetMouseLocation()) end end)
-end
-
--- ============================================
--- 7. 悬浮窗交互逻辑
--- ============================================
-AvatarButton.MouseButton1Click:Connect(function()
-	MainPanel.Visible = not MainPanel.Visible
-end)
-
-print("✅ Snow Disaster Hub UI 加载完成")
