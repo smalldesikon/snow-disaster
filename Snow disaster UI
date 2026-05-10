@@ -1,0 +1,251 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- 创建主屏幕UI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SnowDisasterHub"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = playerGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- ===== 雪花特效容器（初始隐藏）=====
+local snowContainer = Instance.new("Frame", ScreenGui)
+snowContainer.Size = UDim2.fromScale(1, 1)
+snowContainer.BackgroundTransparency = 1
+snowContainer.ZIndex = 0
+snowContainer.Visible = false
+
+-- 创建雪花
+local snowflakes = {}
+local snowCount = 25
+
+for i = 1, snowCount do
+    local snow = Instance.new("TextLabel", snowContainer)
+    snow.Size = UDim2.new(0, math.random(6, 10), 0, math.random(6, 10))
+    snow.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    snow.BackgroundTransparency = 1
+    snow.Text = "❄"
+    snow.TextColor3 = Color3.fromRGB(220, 240, 255)
+    snow.TextStrokeTransparency = 0.8
+    snow.TextStrokeColor3 = Color3.fromRGB(180, 210, 255)
+    snow.Font = Enum.Font.GothamBold
+    snow.TextScaled = true
+    snow.ZIndex = 0
+    
+    snowflakes[i] = {
+        instance = snow,
+        speed = math.random(15, 45) / 100,
+        wobble = math.random(8, 25) / 100,
+        wobbleSpeed = math.random(3, 12) / 10,
+        rotationSpeed = math.random(-3, 3)
+    }
+end
+
+-- 雪花动画连接
+local snowConnection = nil
+
+local function StartSnowAnimation()
+    if snowConnection then return end
+    snowConnection = RunService.RenderStepped:Connect(function(deltaTime)
+        for _, snowData in ipairs(snowflakes) do
+            local snow = snowData.instance
+            local pos = snow.Position
+            
+            pos = UDim2.new(
+                pos.X.Scale, pos.X.Offset,
+                pos.Y.Scale + snowData.speed * deltaTime, pos.Y.Offset
+            )
+            
+            local wobble = math.sin(tick() * snowData.wobbleSpeed) * snowData.wobble
+            snow.Rotation += snowData.rotationSpeed
+            
+            if pos.Y.Scale > 1 then
+                pos = UDim2.new(math.random(), 0, -0.1, 0)
+            end
+            
+            snow.Position = pos
+        end
+    end)
+end
+
+local function StopSnowAnimation()
+    if snowConnection then
+        snowConnection:Disconnect()
+        snowConnection = nil
+    end
+end
+
+-- ===== 悬浮窗容器（固定位置）=====
+local FloatingContainer = Instance.new("Frame")
+FloatingContainer.Name = "FloatingContainer"
+FloatingContainer.Size = UDim2.new(0, 40, 0, 40)
+FloatingContainer.Position = UDim2.new(0, 20, 0, 20)
+FloatingContainer.BackgroundTransparency = 1
+FloatingContainer.Parent = ScreenGui
+FloatingContainer.ZIndex = 100
+FloatingContainer.Active = true
+
+-- 悬浮窗圆形按钮
+local AvatarButton = Instance.new("ImageButton")
+AvatarButton.Size = UDim2.new(0, 36, 0, 36)
+AvatarButton.Position = UDim2.new(0.5, -18, 0.5, -18)
+AvatarButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+AvatarButton.BackgroundTransparency = 0.2
+AvatarButton.BorderSizePixel = 0
+AvatarButton.Parent = FloatingContainer
+AvatarButton.Active = true
+AvatarButton.AutoButtonColor = false
+AvatarButton.ZIndex = 101
+
+local AvatarCorner = Instance.new("UICorner", AvatarButton)
+AvatarCorner.CornerRadius = UDim.new(1, 0)
+
+-- 使用你上传的Roblox图像ID
+AvatarButton.Image = "rbxassetid://138791746843191"
+
+-- ===== 主UI面板（半透明毛玻璃效果）=====
+local MainPanel = Instance.new("Frame")
+MainPanel.Name = "MainPanel"
+MainPanel.Size = UDim2.new(0, 420, 0, 280)
+MainPanel.Position = UDim2.new(0.5, -210, 0.5, -140)
+MainPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainPanel.BackgroundTransparency = 0.2
+MainPanel.Visible = false
+MainPanel.Parent = ScreenGui
+MainPanel.Active = true
+MainPanel.ZIndex = 1
+
+local MainCorner = Instance.new("UICorner", MainPanel)
+MainCorner.CornerRadius = UDim.new(0, 12)
+
+-- ===== 左上角图片 =====
+local TopLeftImage = Instance.new("ImageLabel", MainPanel)
+TopLeftImage.Size = UDim2.new(0, 40, 0, 40)
+TopLeftImage.Position = UDim2.new(0, 12, 0, 12)
+TopLeftImage.BackgroundTransparency = 1
+TopLeftImage.Image = "rbxassetid://138791746843191"
+TopLeftImage.ZIndex = 2
+
+local ImageCorner = Instance.new("UICorner", TopLeftImage)
+ImageCorner.CornerRadius = UDim.new(0, 6)
+
+-- ===== 标题（移到UI中央）=====
+local Title = Instance.new("TextLabel", MainPanel)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Position = UDim2.new(0.5, 0, 0, 0)
+Title.AnchorPoint = Vector2.new(0.5, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Snow Disaster Hub"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 18
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextXAlignment = Enum.TextXAlignment.Center
+Title.ZIndex = 2
+
+-- ===== 左侧装饰面板（无Tab功能）=====
+local LeftPanel = Instance.new("Frame", MainPanel)
+LeftPanel.Size = UDim2.new(0, 90, 1, 0)
+LeftPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+LeftPanel.BackgroundTransparency = 0.3
+LeftPanel.BorderSizePixel = 0
+LeftPanel.ZIndex = 2
+
+local LeftCorner = Instance.new("UICorner", LeftPanel)
+LeftCorner.CornerRadius = UDim.new(0, 12)
+
+-- ===== 分界线 =====
+local DividerLine = Instance.new("Frame", MainPanel)
+DividerLine.Size = UDim2.new(0, 1, 1, -60)
+DividerLine.Position = UDim2.new(0, 90, 0, 50)
+DividerLine.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+DividerLine.BackgroundTransparency = 0.5
+DividerLine.BorderSizePixel = 0
+DividerLine.ZIndex = 2
+
+-- ===== 右侧内容区域（外部加载按钮的地方）=====
+local ContentArea = Instance.new("Frame", MainPanel)
+ContentArea.Name = "ContentArea" -- 给内容区域命名，方便外部访问
+ContentArea.Size = UDim2.new(1, -110, 1, -60)
+ContentArea.Position = UDim2.new(0, 100, 0, 60)
+ContentArea.BackgroundTransparency = 1
+ContentArea.ZIndex = 2
+ContentArea.AutomaticSize = Enum.AutomaticSize.Y -- 自动调整大小
+
+-- 添加UI列表布局，让按钮自动排列
+local UIListLayout = Instance.new("UIListLayout", ContentArea)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 10) -- 按钮之间的间距
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- ===== 悬浮窗交互逻辑 =====
+AvatarButton.MouseButton1Click:Connect(function()
+    MainPanel.Visible = not MainPanel.Visible
+    
+    if MainPanel.Visible then
+        TweenService:Create(MainPanel, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0, 420, 0, 280),
+            Position = UDim2.new(0.5, -210, 0.5, -140)
+        }):Play()
+        
+        snowContainer.Visible = true
+        StartSnowAnimation()
+    else
+        TweenService:Create(MainPanel, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0, 0, 0, 0),
+            Position = UDim2.new(0.5, 0, 0.5, 0)
+        }):Play()
+        
+        snowContainer.Visible = false
+        StopSnowAnimation()
+    end
+end)
+
+-- ===== 外部接口：创建按钮的函数 =====
+local buttonCount = 0
+local function CreateButton(text, callback)
+    buttonCount = buttonCount + 1
+    
+    local button = Instance.new("TextButton")
+    button.Name = "DynamicButton_" .. buttonCount
+    button.Size = UDim2.new(0.9, 0, 0, 40)
+    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    button.BackgroundTransparency = 0.2
+    button.Text = text
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 14
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.AutoButtonColor = false
+    button.Parent = ContentArea
+    
+    local buttonCorner = Instance.new("UICorner", button)
+    buttonCorner.CornerRadius = UDim.new(0, 8)
+    
+    -- 悬停效果
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        }):Play()
+    end)
+    
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        }):Play()
+    end)
+    
+    -- 点击回调
+    button.MouseButton1Click:Connect(function()
+        if callback then
+            callback()
+        end
+    end)
+    
+    return button
+end
+
+-- 将创建按钮的函数暴露给全局，方便外部调用
+_G.CreateHubButton = CreateButton
