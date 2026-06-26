@@ -1,0 +1,1739 @@
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+WindUI:SetTheme("Dark")
+
+local Window = WindUI:CreateWindow({
+    Title = "Snow disaster通用",
+    Icon = "home",
+    Author = "Snow disaster",
+    Folder = "MyScript",
+    Size = UDim2.fromOffset(680, 580),
+    Theme = "Dark",
+    SideBarWidth = 200,
+    ScrollBarEnabled = true
+})
+
+local MainSection = Window:Section({ Title = "功能分类", Opened = true })
+
+local GeneralTab = MainSection:Tab({ Title = "通用", Icon = "home" })
+local RoleTab = MainSection:Tab({ Title = "角色", Icon = "user" })
+local OtherTab = MainSection:Tab({ Title = "其他", Icon = "settings" })
+
+local Players = game:GetService("Players")
+
+local function Notify(title, text)
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = tostring(title),
+            Text = tostring(text),
+            Duration = 2
+        })
+    end)
+end
+
+local pendingHitboxValue = ""
+local pendingSelfHitboxValue = ""
+local pendingHitboxSize = ""
+local pendingSelfHitboxSize = ""
+local pendingFov = ""
+local pendingCameraDist = ""
+local pendingTransparency = ""
+local pendingGravity = ""
+local pendingSpinSpeed = ""
+local pendingAnimSpeed = ""
+local pendingFps = ""
+local pendingFlingPower = ""
+
+local pendingJumpPower = ""
+local pendingHighJumpPower = ""
+local pendingAirJumpCount = ""
+local pendingWalkSpeed = ""
+local pendingHipHeight = ""
+local pendingGameGravity = ""
+local pendingMaxHealth = ""
+local pendingHealth = ""
+local pendingTranslateSpeed = ""
+local pendingVelocitySpeed = ""
+local pendingHeadSize = ""
+local pendingCameraHeight = ""
+local pendingBrightness = ""
+local pendingObjectPath = ""
+
+local TopDownCameraConnection = nil
+
+local selectedPlayer = nil
+local isLoopHeadSit = false
+local headSitConnection = nil
+
+local selectedObject = nil
+local transparencyEnabled = false
+local collisionEnabled = true
+local anchoredEnabled = false
+local fireEnabled = false
+local smokeEnabled = false
+local sparklesEnabled = false
+local material = "Plastic"
+
+local function stopHeadSit()
+    if headSitConnection then
+        headSitConnection:Disconnect()
+        headSitConnection = nil
+    end
+end
+
+local function startHeadSit(targetPlayer)
+    if not targetPlayer then return end
+    
+    stopHeadSit()
+    
+    headSitConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        local lp = game.Players.LocalPlayer
+        local char = lp.Character
+        local targetChar = targetPlayer.Character
+        if char and targetChar and targetChar:FindFirstChild("Head") then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local head = targetChar.Head
+            if hrp and head then
+                hrp.CFrame = head.CFrame * CFrame.new(0, 1.5, 0)
+            end
+        end
+    end)
+end
+
+local Watermark1Active = false
+local CurrentWatermark1 = nil
+
+local function CreateWatermark1()
+    local player = Players.LocalPlayer
+    local playerGui = player:FindFirstChild("PlayerGui")
+    
+    if not playerGui then
+        playerGui = Instance.new("ScreenGui")
+        playerGui.Name = "PlayerGui"
+        playerGui.Parent = player
+    end
+    
+    local existingWatermark = playerGui:FindFirstChild("ChaosKiller_Watermark")
+    if existingWatermark then
+        existingWatermark:Destroy()
+    end
+    
+    local WatermarkGui = Instance.new("ScreenGui")
+    WatermarkGui.Name = "ChaosKiller_Watermark"
+    WatermarkGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    WatermarkGui.ResetOnSpawn = false
+    WatermarkGui.Parent = playerGui
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Text = "Snow disaster"
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.TextScaled = false
+    textLabel.TextSize = 52
+    textLabel.TextTransparency = 0.5
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.BackgroundTransparency = 1
+    textLabel.BorderSizePixel = 0
+    textLabel.Size = UDim2.new(0, 450, 0, 70)
+    textLabel.Position = UDim2.new(0.5, -225, 0.33, -35)
+    textLabel.Parent = WatermarkGui
+    
+    local shadow = Instance.new("UIStroke")
+    shadow.Thickness = 2
+    shadow.Color = Color3.fromRGB(0, 0, 0)
+    shadow.Transparency = 0.6
+    shadow.Parent = textLabel
+    
+    CurrentWatermark1 = WatermarkGui
+end
+
+local function RemoveWatermark1()
+    if CurrentWatermark1 then
+        CurrentWatermark1:Destroy()
+        CurrentWatermark1 = nil
+    end
+end
+
+local Watermark2Active = false
+local CurrentWatermark2 = nil
+
+local function CreateWatermark2()
+    local player = Players.LocalPlayer
+    local playerGui = player:FindFirstChild("PlayerGui")
+    
+    if not playerGui then
+        playerGui = Instance.new("ScreenGui")
+        playerGui.Name = "PlayerGui"
+        playerGui.Parent = player
+    end
+    
+    local existing = playerGui:FindFirstChild("ChaosKiller_FullWatermark")
+    if existing then
+        existing:Destroy()
+    end
+    
+    local WatermarkGui = Instance.new("ScreenGui")
+    WatermarkGui.Name = "ChaosKiller_FullWatermark"
+    WatermarkGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    WatermarkGui.ResetOnSpawn = false
+    WatermarkGui.IgnoreGuiInset = true
+    WatermarkGui.Parent = playerGui
+    
+    local textWidth = 180
+    local textHeight = 40
+    local spacingX = 200
+    local spacingY = 70
+    
+    for row = -3, 12 do
+        for col = -2, 10 do
+            local textLabel = Instance.new("TextLabel")
+            textLabel.Text = "Snow disaster"
+            textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            textLabel.TextScaled = false
+            textLabel.TextSize = 22
+            textLabel.TextTransparency = 0.88
+            textLabel.TextXAlignment = Enum.TextXAlignment.Center
+            textLabel.TextYAlignment = Enum.TextYAlignment.Center
+            textLabel.Font = Enum.Font.GothamBold
+            textLabel.BackgroundTransparency = 1
+            textLabel.BorderSizePixel = 0
+            textLabel.Size = UDim2.new(0, textWidth, 0, textHeight)
+            
+            local offsetX = 0
+            if math.abs(row) % 2 == 1 then
+                offsetX = spacingX / 2
+            end
+            
+            local posX = (col * spacingX) + offsetX
+            local posY = (row * spacingY)
+            
+            textLabel.Position = UDim2.new(0, posX, 0, posY)
+            textLabel.Rotation = -25
+            textLabel.Parent = WatermarkGui
+            
+            local stroke = Instance.new("UIStroke")
+            stroke.Thickness = 1
+            stroke.Color = Color3.fromRGB(0, 0, 0)
+            stroke.Transparency = 0.92
+            stroke.Parent = textLabel
+        end
+    end
+    
+    CurrentWatermark2 = WatermarkGui
+end
+
+local function RemoveWatermark2()
+    if CurrentWatermark2 then
+        CurrentWatermark2:Destroy()
+        CurrentWatermark2 = nil
+    end
+end
+
+local noclipActive = false
+local noclipThread = nil
+
+GeneralTab:Button({
+    Title = "开启穿墙",
+    Icon = "chevrons-right",
+    Variant = "Primary",
+    Callback = function()
+        if noclipActive then
+            noclipActive = false
+            if noclipThread then task.cancel(noclipThread) end
+            local char = game.Players.LocalPlayer.Character
+            if char then
+                for _, v in pairs(char:GetChildren()) do
+                    pcall(function() if v:IsA("BasePart") then v.CanCollide = true end end)
+                end
+            end
+            Notify("穿墙", "已关闭")
+        else
+            noclipActive = true
+            noclipThread = task.spawn(function()
+                while noclipActive do
+                    local char = game.Players.LocalPlayer.Character
+                    if char then
+                        for _, v in pairs(char:GetChildren()) do
+                            pcall(function() if v:IsA("BasePart") then v.CanCollide = false end end)
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+            Notify("穿墙", "已开启")
+        end
+    end
+})
+
+GeneralTab:Divider()
+
+local hitboxCollideLoop = nil
+local hitboxCollideValue = 1
+local selfHitboxCollideLoop = nil
+local selfHitboxCollideValue = 1
+
+local function applyHitboxCollide()
+    if hitboxCollideLoop then hitboxCollideLoop:Disconnect() end
+    hitboxCollideLoop = game:GetService("RunService").RenderStepped:Connect(function()
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer and player.Character then
+                pcall(function()
+                    for _, part in ipairs(player.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            if hitboxCollideValue == 0 then
+                                part.CanCollide = false; part.CanTouch = false
+                            elseif hitboxCollideValue == 1 then
+                                part.CanCollide = true; part.CanTouch = true
+                            else
+                                part.CanCollide = false; part.CanTouch = true
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+end
+
+local function applySelfHitboxCollide()
+    if selfHitboxCollideLoop then selfHitboxCollideLoop:Disconnect() end
+    selfHitboxCollideLoop = game:GetService("RunService").RenderStepped:Connect(function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character then
+            pcall(function()
+                for _, part in ipairs(player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        if selfHitboxCollideValue == 0 then
+                            part.CanCollide = false; part.CanTouch = false
+                        elseif selfHitboxCollideValue == 1 then
+                            part.CanCollide = true; part.CanTouch = true
+                        else
+                            part.CanCollide = false; part.CanTouch = true
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+end
+
+GeneralTab:Input({
+    Title = "碰撞值",
+    Desc = "0-1 (0=全穿墙,1=正常)",
+    Value = "",
+    Callback = function(v) pendingHitboxValue = v end
+})
+
+GeneralTab:Button({
+    Title = "应用碰撞值",
+    Callback = function()
+        local val = tonumber(pendingHitboxValue)
+        if not val or val < 0 or val > 1 then
+            Notify("错误", "请输入0-1之间的数值")
+            return
+        end
+        hitboxCollideValue = val
+        applyHitboxCollide()
+        Notify("穿墙V2", "已应用: " .. val)
+    end
+})
+
+GeneralTab:Input({
+    Title = "自己碰撞值",
+    Desc = "0-1 (0是全穿墙,1是正常)",
+    Value = "",
+    Callback = function(v) pendingSelfHitboxValue = v end
+})
+
+GeneralTab:Button({
+    Title = "应用自己碰撞值",
+    Callback = function()
+        local val = tonumber(pendingSelfHitboxValue)
+        if not val or val < 0 or val > 1 then
+            Notify("错误", "请输入0-1之间的数值")
+            return
+        end
+        selfHitboxCollideValue = val
+        applySelfHitboxCollide()
+        Notify("自己穿墙", "已应用: " .. val)
+    end
+})
+
+GeneralTab:Divider()
+
+local hitboxSize = 15
+local hitboxActive = false
+local hitboxLoop = nil
+local selfHitboxSize = 5
+local selfHitboxLoop = nil
+
+GeneralTab:Input({
+    Title = "碰撞箱大小",
+    Desc = "输入尺寸",
+    Value = "",
+    Callback = function(v) pendingHitboxSize = v end
+})
+
+GeneralTab:Button({
+    Title = "应用碰撞箱大小",
+    Callback = function()
+        local size = tonumber(pendingHitboxSize)
+        if size then
+            hitboxSize = size
+            hitboxActive = true
+            if hitboxLoop then hitboxLoop:Disconnect() end
+            hitboxLoop = game:GetService("RunService").RenderStepped:Connect(function()
+                if not hitboxActive then return end
+                for _, player in ipairs(game.Players:GetPlayers()) do
+                    if player ~= game.Players.LocalPlayer and player.Character then
+                        local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+                        if rootPart then
+                            pcall(function()
+                                rootPart.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+                                rootPart.Transparency = 0.7
+                                rootPart.Material = "Neon"
+                                rootPart.CanCollide = false
+                            end)
+                        end
+                    end
+                end
+            end)
+            Notify("碰撞箱", "已设为: " .. size)
+        end
+    end
+})
+
+GeneralTab:Input({
+    Title = "自己碰撞箱大小",
+    Desc = "输入尺寸",
+    Value = "",
+    Callback = function(v) pendingSelfHitboxSize = v end
+})
+
+GeneralTab:Button({
+    Title = "应用自己碰撞箱大小",
+    Callback = function()
+        local size = tonumber(pendingSelfHitboxSize)
+        if size then
+            selfHitboxSize = size
+            if selfHitboxLoop then selfHitboxLoop:Disconnect() end
+            selfHitboxLoop = game:GetService("RunService").RenderStepped:Connect(function()
+                local player = game.Players.LocalPlayer
+                if player and player.Character then
+                    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+                    if rootPart then
+                        pcall(function()
+                            rootPart.Size = Vector3.new(selfHitboxSize, selfHitboxSize, selfHitboxSize)
+                            rootPart.Transparency = 0.7
+                            rootPart.Material = "Neon"
+                            rootPart.CanCollide = false
+                        end)
+                    end
+                end
+            end)
+            Notify("自己碰撞箱", "已设为: " .. size)
+        end
+    end
+})
+
+GeneralTab:Divider()
+
+GeneralTab:Input({
+    Title = "广角设置",
+    Desc = "视野值",
+    Value = "",
+    Callback = function(v) pendingFov = v end
+})
+
+GeneralTab:Button({
+    Title = "应用广角",
+    Callback = function()
+        local fov = tonumber(pendingFov)
+        if fov then
+            workspace.CurrentCamera.FieldOfView = fov
+            Notify("广角", "已设为: " .. fov)
+        end
+    end
+})
+
+GeneralTab:Input({
+    Title = "视野距离",
+    Desc = "相机最大距离",
+    Value = "",
+    Callback = function(v) pendingCameraDist = v end
+})
+
+GeneralTab:Button({
+    Title = "应用视野距离",
+    Callback = function()
+        local dist = tonumber(pendingCameraDist)
+        if dist then
+            if game.Players.LocalPlayer then
+                game.Players.LocalPlayer.CameraMaxZoomDistance = dist
+            end
+            Notify("视野距离", "已设为: " .. dist)
+        end
+    end
+})
+
+GeneralTab:Divider()
+
+local originalTransparency = {}
+local currentTransparency = nil
+local transparencyConnection = nil
+
+local function onNewPartAdded(part)
+    if part:IsA("BasePart") and currentTransparency ~= nil then
+        if not originalTransparency[part] then originalTransparency[part] = part.Transparency end
+        part.Transparency = currentTransparency
+    end
+end
+
+local function setAllPartsTransparency(val)
+    val = tonumber(val) or 0
+    currentTransparency = val
+    if not transparencyConnection then
+        transparencyConnection = workspace.DescendantAdded:Connect(onNewPartAdded)
+    end
+    for _, part in ipairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") then
+            if not originalTransparency[part] then originalTransparency[part] = part.Transparency end
+            part.Transparency = val
+        end
+    end
+end
+
+local function restoreOriginalTransparency()
+    currentTransparency = nil
+    if transparencyConnection then transparencyConnection:Disconnect()
+    transparencyConnection = nil end
+    for part, trans in pairs(originalTransparency) do
+        if part and part.Parent then part.Transparency = trans end
+    end
+    originalTransparency = {}
+end
+
+GeneralTab:Input({
+    Title = "零件透明度",
+    Desc = "0-1",
+    Value = "",
+    Callback = function(v) pendingTransparency = v end
+})
+
+GeneralTab:Button({
+    Title = "应用透明度",
+    Callback = function()
+        if pendingTransparency ~= "" then
+            setAllPartsTransparency(pendingTransparency)
+            Notify("透明度", "已设为: " .. pendingTransparency)
+        end
+    end
+})
+
+GeneralTab:Button({
+    Title = "恢复透明度",
+    Callback = function()
+        restoreOriginalTransparency()
+        Notify("透明度", "已恢复")
+    end
+})
+
+GeneralTab:Divider()
+
+local gravityLoopActive = false
+local gravityLoopConnection = nil
+
+local function GetClasses(parent, className)
+    local result = {}
+    for _, child in ipairs(parent:GetDescendants()) do
+        if child:IsA(className) then table.insert(result, child) end
+    end
+    return result
+end
+
+local function ForceStopGravityLoop()
+    if gravityLoopConnection then gravityLoopConnection:Disconnect()
+    gravityLoopConnection = nil end
+    gravityLoopActive = false
+    for _, part in ipairs(GetClasses(game.Workspace, "BasePart")) do
+        if not part.Anchored then
+            for _, force in ipairs(part:GetChildren()) do
+                if force:IsA("BodyForce") and force.Name == "CustomGravity" then force:Destroy() end
+            end
+        end
+    end
+    Notify("重力", "已强制关闭")
+end
+
+GeneralTab:Input({
+    Title = "零件重力",
+    Desc = "正数向下,负数向上",
+    Value = "",
+    Callback = function(v) pendingGravity = v end
+})
+
+GeneralTab:Button({
+    Title = "应用重力",
+    Callback = function()
+        local Gravity = tonumber(pendingGravity) or 0
+        if gravityLoopConnection then gravityLoopConnection:Disconnect()
+        gravityLoopConnection = nil end
+        
+        local playerChars = {}
+        for _, p in ipairs(game.Players:GetPlayers()) do
+            if p.Character then table.insert(playerChars, p.Character) end
+        end
+        
+        local function SetGravity(part)
+            for _, pc in ipairs(playerChars) do
+                if part:IsDescendantOf(pc) then return end
+            end
+            if part:IsA("BasePart") and not part.Anchored then
+                for _, f in ipairs(part:GetChildren()) do
+                    if f:IsA("BodyForce") and f.Name == "CustomGravity" then f:Destroy() end
+                end
+                if Gravity ~= 0 then
+                    local bf = Instance.new("BodyForce")
+                    bf.Name = "CustomGravity"
+                    bf.Force = Vector3.new(0, part:GetMass() * Gravity, 0)
+                    bf.Parent = part
+                end
+            end
+        end
+        
+        gravityLoopActive = true
+        gravityLoopConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            if gravityLoopActive then
+                for _, part in ipairs(GetClasses(game.Workspace, "BasePart")) do
+                    SetGravity(part)
+                end
+            end
+        end)
+        workspace.DescendantAdded:Connect(SetGravity)
+        if Gravity == 0 then
+            Notify("重力", "已恢复默认")
+        else
+            Notify("重力", "已设为: " .. Gravity)
+        end
+    end
+})
+
+GeneralTab:Toggle({
+    Title = "重力循环执行",
+    Value = false,
+    Callback = function(s) gravityLoopActive = s end
+})
+
+GeneralTab:Button({
+    Title = "强制关闭重力循环",
+    Callback = function() ForceStopGravityLoop() end
+})
+
+GeneralTab:Divider()
+
+local spinVelocityObj = nil
+local isSpinning = false
+local currentSpinSpeed = 0
+
+local function startSpin()
+    if isSpinning then return end
+    local char = game.Players.LocalPlayer.Character
+    if not char then
+        Notify("错误", "角色未加载")
+        return
+    end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if not rootPart then
+        Notify("错误", "找不到RootPart")
+        return
+    end
+    
+    isSpinning = true
+    spinVelocityObj = Instance.new("BodyAngularVelocity")
+    spinVelocityObj.Name = "SpinVelocity"
+    spinVelocityObj.MaxTorque = Vector3.new(0, math.huge, 0)
+    spinVelocityObj.AngularVelocity = Vector3.new(0, currentSpinSpeed, 0)
+    spinVelocityObj.Parent = rootPart
+    Notify("旋转", "已开启，速度: " .. currentSpinSpeed)
+end
+
+local function stopSpin()
+    if not isSpinning then return end
+    isSpinning = false
+    if spinVelocityObj then
+        spinVelocityObj:Destroy()
+        spinVelocityObj = nil
+    end
+    Notify("旋转", "已关闭")
+end
+
+local function updateSpinSpeed()
+    if isSpinning and spinVelocityObj then
+        spinVelocityObj.AngularVelocity = Vector3.new(0, currentSpinSpeed, 0)
+    end
+end
+
+GeneralTab:Input({
+    Title = "旋转速度",
+    Desc = "输入速度（正数顺时针，负数逆时针）",
+    Value = "",
+    Callback = function(v) pendingSpinSpeed = v end
+})
+
+GeneralTab:Button({
+    Title = "设置旋转速度",
+    Callback = function()
+        local sp = tonumber(pendingSpinSpeed)
+        if sp ~= nil then
+            currentSpinSpeed = sp
+            updateSpinSpeed()
+            Notify("旋转速度", "已设为: " .. sp)
+        else
+            Notify("错误", "请输入数字")
+        end
+    end
+})
+
+GeneralTab:Toggle({
+    Title = "旋转开关",
+    Value = false,
+    Callback = function(s)
+        if s then
+            startSpin()
+        else
+            stopSpin()
+        end
+    end
+})
+
+GeneralTab:Divider()
+
+local animSpeed = 5
+local animEnabled = false
+local animConn = nil
+
+local function applyAnim()
+    local char = game.Players.LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") and animEnabled then
+        char.Humanoid.WalkSpeed = 16 * animSpeed
+        char.Humanoid.JumpPower = 50 * animSpeed
+    end
+end
+
+local function resetAnim()
+    local char = game.Players.LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = 16
+        char.Humanoid.JumpPower = 50
+    end
+end
+
+GeneralTab:Input({
+    Title = "动画速度",
+    Desc = "倍数",
+    Value = "",
+    Callback = function(v) pendingAnimSpeed = v end
+})
+
+GeneralTab:Button({
+    Title = "设置动画速度",
+    Callback = function()
+        local sp = tonumber(pendingAnimSpeed)
+        if sp then
+            animSpeed = sp
+            if animEnabled then applyAnim() end
+            Notify("动画速度", "已设为: " .. sp .. "x")
+        end
+    end
+})
+
+GeneralTab:Toggle({
+    Title = "动画速度开关",
+    Value = false,
+    Callback = function(s)
+        animEnabled = s
+        if animConn then animConn:Disconnect()
+        animConn = nil end
+        if s then
+            applyAnim()
+            animConn = game:GetService("RunService").RenderStepped:Connect(applyAnim)
+            Notify("动画速度", "已开启")
+        else
+            resetAnim()
+            Notify("动画速度", "已关闭")
+        end
+    end
+})
+
+GeneralTab:Divider()
+
+GeneralTab:Input({
+    Title = "FPS限制",
+    Desc = "0=无限制",
+    Value = "",
+    Callback = function(v) pendingFps = v end
+})
+
+GeneralTab:Button({
+    Title = "应用FPS",
+    Callback = function()
+        local fps = tonumber(pendingFps)
+        if fps then
+            pcall(function() settings().Rendering.FrameRateManager.MaxFramerate = fps end)
+            pcall(function() setfpscap(fps) end)
+            Notify("FPS", "已设为: " .. fps)
+        end
+    end
+})
+
+GeneralTab:Divider()
+
+local flingEnabled = false
+local flingPower = 10000
+local flingThread = nil
+local flingMove = 0.1
+
+GeneralTab:Input({
+    Title = "击飞距离",
+    Desc = "输入击飞距离",
+    Value = "",
+    Callback = function(v) pendingFlingPower = v end
+})
+
+GeneralTab:Button({
+    Title = "设置击飞距离",
+    Callback = function()
+        local p = tonumber(pendingFlingPower)
+        if p then
+            flingPower = p
+            Notify("击飞距离", "已设为: " .. p)
+        end
+    end
+})
+
+GeneralTab:Toggle({
+    Title = "启用击飞",
+    Value = false,
+    Callback = function(s)
+        flingEnabled = s
+        if flingThread then task.cancel(flingThread); flingThread = nil end
+        if s then
+            flingThread = task.spawn(function()
+                local rs = game:GetService("RunService")
+                local lp = game.Players.LocalPlayer
+                while flingEnabled do
+                    rs.Heartbeat:Wait()
+                    local c = lp.Character
+                    local hrp = c and c:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        local vel = hrp.Velocity
+                        hrp.Velocity = vel * flingPower + Vector3.new(0, flingPower, 0)
+                        rs.RenderStepped:Wait()
+                        hrp.Velocity = vel
+                        rs.Stepped:Wait()
+                        hrp.Velocity = vel + Vector3.new(0, flingMove, 0)
+                        flingMove = -flingMove
+                    end
+                end
+            end)
+            Notify("击飞", "已开启")
+        else
+            Notify("击飞", "已关闭")
+        end
+    end
+})
+
+GeneralTab:Divider()
+
+GeneralTab:Toggle({
+    Title = "上帝视角",
+    Value = false,
+    Callback = function(State)
+        if State then
+            local cameraConnection
+            cameraConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                local camera = workspace.CurrentCamera
+                if camera.CameraSubject then
+                    local character = camera.CameraSubject.Parent
+                    if character then
+                        local root = character:FindFirstChild("HumanoidRootPart")
+                        if root then
+                            local cameraHeight = 50
+                            local cameraOffset = Vector3.new(0, cameraHeight, 0)
+                            local cameraPosition = root.Position + cameraOffset
+                            local lookAtPosition = root.Position
+                            
+                            camera.CFrame = CFrame.lookAt(cameraPosition, lookAtPosition)
+                            camera.FieldOfView = 10000
+                        end
+                    end
+                end
+            end)
+            
+            TopDownCameraConnection = cameraConnection
+            Notify("上帝视角", "已开启")
+        else
+            if TopDownCameraConnection then
+                TopDownCameraConnection:Disconnect()
+                TopDownCameraConnection = nil
+            end
+            
+            if game.Players.LocalPlayer.Character then
+                local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    workspace.CurrentCamera.CameraSubject = humanoid
+                end
+            end
+            
+            Notify("上帝视角", "已关闭")
+        end
+    end
+})
+
+GeneralTab:Input({
+    Title = "视角高度",
+    Desc = "输入高度值 (默认: 50)",
+    Value = "",
+    Callback = function(v) pendingCameraHeight = v end
+})
+
+GeneralTab:Button({
+    Title = "应用视角高度",
+    Callback = function()
+        local height = tonumber(pendingCameraHeight)
+        if height then
+            if TopDownCameraConnection then
+                TopDownCameraConnection:Disconnect()
+                TopDownCameraConnection = nil
+                
+                local cameraConnection
+                cameraConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                    local camera = workspace.CurrentCamera
+                    if camera.CameraSubject then
+                        local character = camera.CameraSubject.Parent
+                        if character then
+                            local root = character:FindFirstChild("HumanoidRootPart")
+                            if root then
+                                local cameraPosition = root.Position + Vector3.new(0, height, 0)
+                                local lookAtPosition = root.Position
+                                camera.CFrame = CFrame.lookAt(cameraPosition, lookAtPosition)
+                                camera.FieldOfView = 10000
+                            end
+                        end
+                    end
+                end)
+                
+                TopDownCameraConnection = cameraConnection
+            end
+            
+            Notify("视角设置", "视角高度已设为: " .. height)
+        end
+    end
+})
+
+GeneralTab:Button({
+    Title = "重置视角",
+    Callback = function()
+        if TopDownCameraConnection then
+            TopDownCameraConnection:Disconnect()
+            TopDownCameraConnection = nil
+        end
+        
+        if game.Players.LocalPlayer.Character then
+            local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                workspace.CurrentCamera.CameraSubject = humanoid
+                workspace.CurrentCamera.FieldOfView = 70
+            end
+        end
+        
+        Notify("视角重置", "视角已重置为默认")
+    end
+})
+
+GeneralTab:Divider()
+
+GeneralTab:Input({
+    Title = "游戏亮度设置",
+    Desc = "输入亮度值 (默认为0)",
+    Value = "",
+    Callback = function(v) pendingBrightness = v end
+})
+
+GeneralTab:Button({
+    Title = "应用亮度",
+    Callback = function()
+        local brightness = tonumber(pendingBrightness)
+        if brightness then
+            game.Lighting.Ambient = Color3.new(brightness, brightness, brightness)
+            Notify("亮度设置", "游戏亮度已设为: " .. brightness)
+        end
+    end
+})
+
+GeneralTab:Divider()
+
+GeneralTab:Button({
+    Title = "正常视角",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        LocalPlayer.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Zoom
+        Notify("视角设置", "已切换为正常视角")
+    end
+})
+
+GeneralTab:Button({
+    Title = "强制第一视角",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        LocalPlayer.CameraMode = Enum.CameraMode.LockFirstPerson
+        Notify("视角设置", "已切换为强制第一视角")
+    end
+})
+
+GeneralTab:Button({
+    Title = "强制第三视角",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        LocalPlayer.CameraMode = Enum.CameraMode.Classic
+        Notify("视角设置", "已切换为强制第三视角")
+    end
+})
+
+local highJumpEnabled = false
+local highJumpConn = nil
+local highJumpPowerVal = 100
+
+local maxAirJumps = 0
+local airJumpsUsed = 0
+local wasGrounded = true
+local airJumpEnabled = false
+local airJumpHeartbeat = nil
+local airJumpRequest = nil
+
+local translateEnabled = false
+local translateConn = nil
+local translateSpeedVal = 50
+
+local velocityEnabled = false
+local velocityConn = nil
+local velocitySpeedVal = 100
+
+local function getHumanoid()
+    local c = game.Players.LocalPlayer.Character
+    return c and c:FindFirstChildOfClass("Humanoid")
+end
+
+local function isGrounded()
+    local h = getHumanoid()
+    return h and h.FloorMaterial ~= Enum.Material.Air
+end
+
+RoleTab:Input({
+    Title = "跳跃高度",
+    Desc = "",
+    Value = "",
+    Callback = function(v) pendingJumpPower = v end
+})
+
+RoleTab:Button({
+    Title = "应用跳跃高度",
+    Callback = function()
+        local v = tonumber(pendingJumpPower)
+        if v then
+            local c = game.Players.LocalPlayer.Character
+            if c and c:FindFirstChild("Humanoid") then
+                c.Humanoid.JumpPower = v
+            end
+            Notify("跳跃高度", "已设为: " .. v)
+        end
+    end
+})
+
+RoleTab:Input({
+    Title = "高跳力量",
+    Desc = "",
+    Value = "",
+    Callback = function(v) pendingHighJumpPower = v end
+})
+
+RoleTab:Button({
+    Title = "应用高跳力量",
+    Callback = function()
+        local v = tonumber(pendingHighJumpPower)
+        if v then
+            highJumpPowerVal = v
+            Notify("高跳力量", "已设为: " .. v)
+        end
+    end
+})
+
+RoleTab:Toggle({
+    Title = "高跳开关",
+    Value = false,
+    Callback = function(s)
+        if highJumpConn then highJumpConn:Disconnect()
+        highJumpConn = nil end
+        highJumpEnabled = s
+        if s then
+            highJumpConn = game:GetService("UserInputService").JumpRequest:Connect(function()
+                if highJumpEnabled then
+                    local c = game.Players.LocalPlayer.Character
+                    local rp = c and c:FindFirstChild("HumanoidRootPart")
+                    if rp then
+                        local vel = rp.Velocity
+                        rp.Velocity = Vector3.new(vel.X, highJumpPowerVal, vel.Z)
+                    end
+                end
+            end)
+            Notify("高跳", "已开启")
+        else
+            Notify("高跳", "已关闭")
+        end
+    end
+})
+
+RoleTab:Divider()
+
+RoleTab:Input({
+    Title = "空中跳跃次数",
+    Desc = "",
+    Value = "",
+    Callback = function(v) pendingAirJumpCount = v end
+})
+
+RoleTab:Button({
+    Title = "应用跳跃次数",
+    Callback = function()
+        local v = tonumber(pendingAirJumpCount)
+        if v and v >= 0 then
+            maxAirJumps = v
+            Notify("空中跳跃", "次数: " .. v)
+        end
+    end
+})
+
+RoleTab:Toggle({
+    Title = "空中跳跃开关",
+    Value = false,
+    Callback = function(s)
+        if airJumpHeartbeat then airJumpHeartbeat:Disconnect()
+        airJumpHeartbeat = nil end
+        if airJumpRequest then airJumpRequest:Disconnect()
+        airJumpRequest = nil end
+        airJumpEnabled = s
+        if s then
+            wasGrounded = true
+            airJumpsUsed = 0
+            airJumpHeartbeat = game:GetService("RunService").Heartbeat:Connect(function()
+                if not airJumpEnabled then return end
+                local g = isGrounded()
+                if g and not wasGrounded then airJumpsUsed = 0 end
+                wasGrounded = g
+            end)
+            airJumpRequest = game:GetService("UserInputService").JumpRequest:Connect(function()
+                if not airJumpEnabled then return end
+                local h = getHumanoid()
+                local rp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if not h or not rp then return end
+                local g = isGrounded()
+                if g then
+                    h:ChangeState(Enum.HumanoidStateType.Jumping)
+                    airJumpsUsed = 0
+                elseif airJumpsUsed < maxAirJumps then
+                    local vel = rp.Velocity
+                    rp.Velocity = Vector3.new(vel.X, h.JumpPower, vel.Z)
+                    airJumpsUsed = airJumpsUsed + 1
+                end
+            end)
+            Notify("空中跳跃", "已开启")
+        else
+            Notify("空中跳跃", "已关闭")
+        end
+    end
+})
+
+RoleTab:Divider()
+
+RoleTab:Input({
+    Title = "移动速度",
+    Desc = "",
+    Value = "",
+    Callback = function(v) pendingWalkSpeed = v end
+})
+
+RoleTab:Button({
+    Title = "应用移动速度",
+    Callback = function()
+        local v = tonumber(pendingWalkSpeed)
+        if v then
+            local h = getHumanoid()
+            if h then h.WalkSpeed = v end
+            Notify("移动速度", "已设为: " .. v)
+        end
+    end
+})
+
+RoleTab:Input({
+    Title = "髋部高度",
+    Desc = "",
+    Value = "",
+    Callback = function(v) pendingHipHeight = v end
+})
+
+RoleTab:Button({
+    Title = "应用髋部高度",
+    Callback = function()
+        local v = tonumber(pendingHipHeight)
+        if v then
+            local h = getHumanoid()
+            if h then h.HipHeight = v end
+            Notify("髋部高度", "已设为: " .. v)
+        end
+    end
+})
+
+RoleTab:Divider()
+
+RoleTab:Input({
+    Title = "游戏重力",
+    Desc = "",
+    Value = "",
+    Callback = function(v) pendingGameGravity = v end
+})
+
+RoleTab:Button({
+    Title = "应用游戏重力",
+    Callback = function()
+        local v = tonumber(pendingGameGravity)
+        if v then
+            game.Workspace.Gravity = v
+            Notify("游戏重力", "已设为: " .. v)
+        end
+    end
+})
+
+RoleTab:Divider()
+
+RoleTab:Input({
+    Title = "最大血量",
+    Desc = "",
+    Value = "",
+    Callback = function(v) pendingMaxHealth = v end
+})
+
+RoleTab:Button({
+    Title = "应用最大血量",
+    Callback = function()
+        local v = tonumber(pendingMaxHealth)
+        if v then
+            local h = getHumanoid()
+            if h then h.MaxHealth = v end
+            Notify("最大血量", "已设为: " .. v)
+        end
+    end
+})
+
+RoleTab:Input({
+    Title = "当前血量",
+    Desc = "只能自己看",
+    Value = "",
+    Callback = function(v) pendingHealth = v end
+})
+
+RoleTab:Button({
+    Title = "应用当前血量",
+    Callback = function()
+        local v = tonumber(pendingHealth)
+        if v then
+            local h = getHumanoid()
+            if h then h.Health = v end
+            Notify("当前血量", "已设为: " .. v)
+        end
+    end
+})
+
+RoleTab:Divider()
+
+RoleTab:Input({
+    Title = "瞬移式加速速度",
+    Desc = "",
+    Value = "",
+    Callback = function(v) pendingTranslateSpeed = v end
+})
+
+RoleTab:Button({
+    Title = "设置瞬移速度",
+    Callback = function()
+        local v = tonumber(pendingTranslateSpeed)
+        if v then
+            translateSpeedVal = v
+            Notify("瞬移速度", "已设为: " .. v)
+        end
+    end
+})
+
+RoleTab:Toggle({
+    Title = "瞬移式加速开关",
+    Value = false,
+    Callback = function(s)
+        if translateConn then translateConn:Disconnect()
+        translateConn = nil end
+        translateEnabled = s
+        if s then
+            translateConn = game:GetService("RunService").Heartbeat:Connect(function()
+                if not translateEnabled then return end
+                local c = game.Players.LocalPlayer.Character
+                local h = c and c:FindFirstChild("Humanoid")
+                if c and h and h.Parent and h.MoveDirection.Magnitude > 0 then
+                    c:TranslateBy(h.MoveDirection * translateSpeedVal / 30)
+                end
+            end)
+            Notify("瞬移式加速", "已开启")
+        else
+            Notify("瞬移式加速", "已关闭")
+        end
+    end
+})
+
+RoleTab:Divider()
+
+RoleTab:Input({
+    Title = "速度式加速速度",
+    Desc = "",
+    Value = "",
+    Callback = function(v) pendingVelocitySpeed = v end
+})
+
+RoleTab:Button({
+    Title = "设置速度式速度",
+    Callback = function()
+        local v = tonumber(pendingVelocitySpeed)
+        if v then
+            velocitySpeedVal = v
+            Notify("速度式速度", "已设为: " .. v)
+        end
+    end
+})
+
+RoleTab:Toggle({
+    Title = "速度式加速开关",
+    Value = false,
+    Callback = function(s)
+        if velocityConn then velocityConn:Disconnect()
+        velocityConn = nil end
+        velocityEnabled = s
+        if s then
+            velocityConn = game:GetService("RunService").Heartbeat:Connect(function()
+                if not velocityEnabled then return end
+                local c = game.Players.LocalPlayer.Character
+                local h = c and c:FindFirstChild("Humanoid")
+                local rp = c and c:FindFirstChild("HumanoidRootPart")
+                if c and h and rp and h.MoveDirection.Magnitude > 0 then
+                    local md = h.MoveDirection
+                    local nv = md * velocitySpeedVal
+                    rp.Velocity = Vector3.new(nv.X, rp.Velocity.Y, nv.Z)
+                end
+            end)
+            Notify("速度式加速", "已开启")
+        else
+            local rp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if rp then rp.Velocity = Vector3.new(0, rp.Velocity.Y, 0) end
+            Notify("速度式加速", "已关闭")
+        end
+    end
+})
+
+local headSizeVal = 15
+local headActive = false
+local headLoop = nil
+
+OtherTab:Input({
+    Title = "头部大小数值",
+    Desc = "",
+    Value = "",
+    Callback = function(v) pendingHeadSize = v end
+})
+
+OtherTab:Button({
+    Title = "应用头部尺寸",
+    Callback = function()
+        local sz = tonumber(pendingHeadSize)
+        if sz then
+            if headLoop then headLoop:Disconnect()
+            headLoop = nil end
+            headSizeVal = sz
+            headActive = true
+            headLoop = game:GetService("RunService").RenderStepped:Connect(function()
+                if not headActive then return end
+                for _, p in ipairs(game.Players:GetPlayers()) do
+                    if p ~= game.Players.LocalPlayer and p.Character then
+                        local head = p.Character:FindFirstChild("Head")
+                        if head then
+                            pcall(function()
+                                head.Size = Vector3.new(headSizeVal, headSizeVal, headSizeVal)
+                                head.Transparency = 1
+                                head.Material = "Neon"
+                                head.CanCollide = false
+                                head.Massless = true
+                            end)
+                        end
+                    end
+                end
+            end)
+            Notify("头部", "尺寸已应用: " .. headSizeVal)
+        end
+    end
+})
+
+OtherTab:Button({
+    Title = "关闭头部修改",
+    Callback = function()
+        headActive = false
+        if headLoop then headLoop:Disconnect()
+        headLoop = nil end
+        Notify("头部", "已关闭")
+    end
+})
+
+OtherTab:Divider()
+
+OtherTab:Button({
+    Title = "开启水印",
+    Callback = function()
+        if Watermark1Active then
+            Notify("水印", "水印已开启，请勿重复开启")
+            return
+        end
+        CreateWatermark1()
+        Watermark1Active = true
+        Notify("水印", "水印已开启")
+    end
+})
+
+OtherTab:Button({
+    Title = "关闭水印",
+    Callback = function()
+        if not Watermark1Active then
+            Notify("水印", "水印未开启")
+            return
+        end
+        RemoveWatermark1()
+        Watermark1Active = false
+        Notify("水印", "水印已关闭")
+    end
+})
+
+OtherTab:Divider()
+
+OtherTab:Button({
+    Title = "开启水印二",
+    Callback = function()
+        if Watermark2Active then
+            Notify("水印二", "水印二已开启，请勿重复开启")
+            return
+        end
+        CreateWatermark2()
+        Watermark2Active = true
+        Notify("水印二", "已开启")
+    end
+})
+
+OtherTab:Button({
+    Title = "关闭水印二",
+    Callback = function()
+        if not Watermark2Active then
+            Notify("水印二", "水印二未开启")
+            return
+        end
+        RemoveWatermark2()
+        Watermark2Active = false
+        Notify("水印二", "水印二已关闭")
+    end
+})
+
+OtherTab:Divider()
+
+local playerNames = {}
+for _, plr in ipairs(game.Players:GetPlayers()) do
+    if plr ~= game.Players.LocalPlayer then
+        table.insert(playerNames, plr.Name)
+    end
+end
+
+OtherTab:Dropdown({
+    Title = "选择玩家",
+    Values = playerNames,
+    Value = playerNames[1] or "",
+    Callback = function(v)
+        selectedPlayer = game.Players:FindFirstChild(v)
+    end
+})
+
+OtherTab:Button({
+    Title = "坐选定玩家头上",
+    Callback = function()
+        if not selectedPlayer then
+            Notify("选择玩家", "请先从下拉框选择玩家")
+            return
+        end
+        stopHeadSit()
+        startHeadSit(selectedPlayer)
+        Notify("坐头", "已坐到 " .. selectedPlayer.Name .. " 头上")
+    end
+})
+
+OtherTab:Toggle({
+    Title = "循环坐头",
+    Desc = "死亡重生后继续",
+    Value = false,
+    Callback = function(Value)
+        isLoopHeadSit = Value
+        if Value and selectedPlayer then
+            stopHeadSit()
+            startHeadSit(selectedPlayer)
+            Notify("循环坐头", "已开启")
+        else
+            stopHeadSit()
+            Notify("循环坐头", "已关闭")
+        end
+    end
+})
+
+OtherTab:Button({
+    Title = "停止坐头",
+    Callback = function()
+        stopHeadSit()
+        Notify("坐头", "已停止")
+    end
+})
+
+OtherTab:Divider()
+
+OtherTab:Input({
+    Title = "物体路径",
+    Desc = "输入物体路径 (如: workspace.Part)",
+    Value = "",
+    Callback = function(v) pendingObjectPath = v end
+})
+
+OtherTab:Button({
+    Title = "选择物体",
+    Callback = function()
+        local success, obj = pcall(function()
+            return loadstring("return " .. pendingObjectPath)()
+        end)
+        if success and obj then
+            selectedObject = obj
+            Notify("物体选择", "已选择: " .. pendingObjectPath)
+        else
+            Notify("物体选择", "未找到指定物体")
+        end
+    end
+})
+
+OtherTab:Divider()
+
+OtherTab:Toggle({
+    Title = "物体透明化",
+    Desc = "开启后物体半透明",
+    Value = false,
+    Callback = function(Value)
+        transparencyEnabled = Value
+        if selectedObject then
+            local function setTransparency(instance, alpha)
+                if instance:IsA("BasePart") then
+                    instance.Transparency = alpha
+                end
+                for _, child in ipairs(instance:GetChildren()) do
+                    setTransparency(child, alpha)
+                end
+            end
+            setTransparency(selectedObject, Value and 0.5 or 0)
+        end
+    end
+})
+
+OtherTab:Toggle({
+    Title = "禁用碰撞",
+    Desc = "开启后物体无碰撞",
+    Value = false,
+    Callback = function(Value)
+        collisionEnabled = not Value
+        if selectedObject then
+            local function setCollision(instance)
+                if instance:IsA("BasePart") then
+                    instance.CanCollide = collisionEnabled
+                end
+                for _, child in ipairs(instance:GetChildren()) do
+                    setCollision(child)
+                end
+            end
+            setCollision(selectedObject)
+        end
+    end
+})
+
+OtherTab:Toggle({
+    Title = "固定物体",
+    Desc = "开启后物体固定不动",
+    Value = false,
+    Callback = function(Value)
+        anchoredEnabled = Value
+        if selectedObject then
+            local function setAnchored(instance)
+                if instance:IsA("BasePart") then
+                    instance.Anchored = Value
+                end
+                for _, child in ipairs(instance:GetChildren()) do
+                    setAnchored(child)
+                end
+            end
+            setAnchored(selectedObject)
+        end
+    end
+})
+
+OtherTab:Toggle({
+    Title = "添加火焰效果",
+    Desc = "开启后物体燃烧",
+    Value = false,
+    Callback = function(Value)
+        fireEnabled = Value
+        if selectedObject then
+            local function setFire(instance)
+                if instance:IsA("BasePart") then
+                    local fire = instance:FindFirstChildOfClass("Fire")
+                    if Value then
+                        if not fire then
+                            fire = Instance.new("Fire")
+                            fire.Name = "ObjectFire_" .. tostring(tick())
+                            fire.Size = 5
+                            fire.Heat = 10
+                            fire.Parent = instance
+                        end
+                    else
+                        if fire and string.find(fire.Name or "", "ObjectFire") then
+                            fire:Destroy()
+                        end
+                    end
+                end
+                for _, child in ipairs(instance:GetChildren()) do
+                    setFire(child)
+                end
+            end
+            setFire(selectedObject)
+        end
+    end
+})
+
+OtherTab:Toggle({
+    Title = "添加烟雾效果",
+    Desc = "开启后物体冒烟",
+    Value = false,
+    Callback = function(Value)
+        smokeEnabled = Value
+        if selectedObject then
+            local function setSmoke(instance)
+                if instance:IsA("BasePart") then
+                    local smoke = instance:FindFirstChildOfClass("Smoke")
+                    if Value then
+                        if not smoke then
+                            smoke = Instance.new("Smoke")
+                            smoke.Name = "ObjectSmoke_" .. tostring(tick())
+                            smoke.Size = 5
+                            smoke.Opacity = 0.3
+                            smoke.Parent = instance
+                        end
+                    else
+                        if smoke and string.find(smoke.Name or "", "ObjectSmoke") then
+                            smoke:Destroy()
+                        end
+                    end
+                end
+                for _, child in ipairs(instance:GetChildren()) do
+                    setSmoke(child)
+                end
+            end
+            setSmoke(selectedObject)
+        end
+    end
+})
+
+OtherTab:Toggle({
+    Title = "添加闪光效果",
+    Desc = "开启后物体闪光",
+    Value = false,
+    Callback = function(Value)
+        sparklesEnabled = Value
+        if selectedObject then
+            local function setSparkles(instance)
+                if instance:IsA("BasePart") then
+                    local sparkles = instance:FindFirstChildOfClass("Sparkles")
+                    if Value then
+                        if not sparkles then
+                            sparkles = Instance.new("Sparkles")
+                            sparkles.Name = "ObjectSparkles_" .. tostring(tick())
+                            sparkles.SparkleColor = Color3.fromRGB(255, 255, 0)
+                            sparkles.Parent = instance
+                        end
+                    else
+                        if sparkles and string.find(sparkles.Name or "", "ObjectSparkles") then
+                            sparkles:Destroy()
+                        end
+                    end
+                end
+                for _, child in ipairs(instance:GetChildren()) do
+                    setSparkles(child)
+                end
+            end
+            setSparkles(selectedObject)
+        end
+    end
+})
+
+OtherTab:Dropdown({
+    Title = "改变材质",
+    Values = {"Plastic", "Wood", "Slate", "Concrete", "CorrodedMetal", "DiamondPlate", 
+        "Foil", "Grass", "Ice", "Marble", "Granite", "Brick", "Pebble", "Sand", 
+        "Fabric", "SmoothPlastic", "Metal", "WoodPlanks", "Cobblestone", "Air", 
+        "Water", "Rock", "Glacier", "Snow", "Sandstone", "Mud", "Basalt", "Ground", 
+        "CrackedLava", "Neon", "Glass", "ForceField"},
+    Value = "Plastic",
+    Callback = function(Value)
+        material = Value
+        if selectedObject then
+            local function setMaterial(instance)
+                if instance:IsA("BasePart") then
+                    instance.Material = Enum.Material[Value]
+                end
+                for _, child in ipairs(instance:GetChildren()) do
+                    setMaterial(child)
+                end
+            end
+            setMaterial(selectedObject)
+        end
+    end
+})
+
+Window:OnClose(function()
+    if noclipThread then task.cancel(noclipThread) end
+    if hitboxCollideLoop then hitboxCollideLoop:Disconnect() end
+    if selfHitboxCollideLoop then selfHitboxCollideLoop:Disconnect() end
+    if hitboxLoop then hitboxLoop:Disconnect() end
+    if selfHitboxLoop then selfHitboxLoop:Disconnect() end
+    if transparencyConnection then transparencyConnection:Disconnect() end
+    if gravityLoopConnection then gravityLoopConnection:Disconnect() end
+    if animConn then animConn:Disconnect() end
+    if flingThread then task.cancel(flingThread) end
+    if highJumpConn then highJumpConn:Disconnect() end
+    if airJumpHeartbeat then airJumpHeartbeat:Disconnect() end
+    if airJumpRequest then airJumpRequest:Disconnect() end
+    if translateConn then translateConn:Disconnect() end
+    if velocityConn then velocityConn:Disconnect() end
+    if headLoop then headLoop:Disconnect() end
+    if TopDownCameraConnection then TopDownCameraConnection:Disconnect() end
+    stopHeadSit()
+    stopSpin()
+end)
